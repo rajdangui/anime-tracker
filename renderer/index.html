@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="app-title">
+          <span class="gradient-text">🎌 Anime Tracker</span>
+        </h1>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="addAnimeBtn">
+            ➕ Add Anime
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <nav class="nav">
+          <button class="nav-item active" data-view="all">
+            📋 All Anime
+          </button>
+          <button class="nav-item" data-view="watching">
+            📺 Watching
+          </button>
+          <button class="nav-item" data-view="completed">
+            ✅ Completed
+          </button>
+          <button class="nav-item" data-view="plan-to-watch">
+            📝 Plan to Watch
+          </button>
+          <button class="nav-item" data-view="on-hold">
+            ⏸️ On Hold
+          </button>
+          <button class="nav-item" data-view="dropped">
+            ❌ Dropped
+          </button>
+        </nav>
+
+        <!-- Statistics -->
+        <div class="stats-panel">
+          <h3>📊 Statistics</h3>
+          <div class="stat-item">
+            <span class="stat-label">Total Anime:</span>
+            <span class="stat-value" id="totalCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Watching:</span>
+            <span class="stat-value" id="watchingCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Completed:</span>
+            <span class="stat-value" id="completedCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Episodes Watched:</span>
+            <span class="stat-value" id="totalEpisodes">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Rating:</span>
+            <span class="stat-value" id="avgRating">-</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="🔍 Search anime by title or notes..."
+            class="search-input"
+          >
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-controls">
+          <span class="view-label">View:</span>
+          <button class="view-btn active" data-layout="grid">
+            🎴 Grid
+          </button>
+          <button class="view-btn" data-layout="table">
+            📋 Table
+          </button>
+        </div>
+
+        <!-- Anime List -->
+        <div id="animeContainer" class="anime-grid">
+          <!-- Anime cards will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon">📺</div>
+          <h2>No Anime Found</h2>
+          <p>Start by adding your first anime to track!</p>
+          <button class="btn btn-primary" id="emptyAddBtn">
+            ➕ Add Your First Anime
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="animeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Anime</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="animeForm" class="modal-body">
+        <div class="form-group">
+          <label for="animeTitle">Title *</label>
+          <input type="text" id="animeTitle" required>
+        </div>
+
+        <div class="form-group">
+          <label for="animeStatus">Status</label>
+          <select id="animeStatus">
+            <option value="plan-to-watch">📋 Plan to Watch</option>
+            <option value="watching">📺 Watching</option>
+            <option value="completed">✅ Completed</option>
+            <option value="on-hold">⏸️ On Hold</option>
+            <option value="dropped">❌ Dropped</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="animeEpisodes">Total Episodes</label>
+            <input type="number" id="animeEpisodes" min="0">
+          </div>
+
+          <div class="form-group">
+            <label for="animeCurrent">Current Episode</label>
+            <input type="number" id="animeCurrent" min="0" value="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="animeRating">Rating (0-10)</label>
+          <input type="number" id="animeRating" min="0" max="10" step="0.1">
+        </div>
+
+        <div class="form-group">
+          <label for="animeNotes">Notes</label>
+          <textarea id="animeNotes" rows="3"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <span id="submitBtnText">Add Anime</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete "<span id="deleteAnimeName"></span>"?</p>
+        <p class="text-muted">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

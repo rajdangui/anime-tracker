@@ -4,3 +4,15 @@ package-lock.json
 *.log
 .vscode/
 .idea/
+
+# Electron build output
+dist/
+out/
+
+# User data
+.anime-tracker/
+
+# Firebase config (should be customized per user)
+# Comment out if you want to share your Firebase config
+# src/firebase-config.js
+
