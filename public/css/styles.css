@@ -8,7 +8,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e8e8e8;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .app {
@@ -614,4 +616,252 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Scrollytelling & Animation Effects */
+.anime-card, .nav-item, .stat-item {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anime-card:nth-child(1) { animation-delay: 0.1s; }
+.anime-card:nth-child(2) { animation-delay: 0.2s; }
+.anime-card:nth-child(3) { animation-delay: 0.3s; }
+.anime-card:nth-child(4) { animation-delay: 0.4s; }
+.anime-card:nth-child(5) { animation-delay: 0.5s; }
+.anime-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Parallax scroll effect */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 1024px) {
+  .anime-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-content {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .stats-panel {
+    margin-top: 1rem;
+  }
+
+  .content-area {
+    padding: 1rem;
+  }
+
+  .anime-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .view-controls {
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-title {
+    font-size: 1.25rem;
+  }
+
+  .header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .anime-card {
+    padding: 1rem;
+  }
+
+  .anime-title {
+    font-size: 1.1rem;
+  }
+
+  .stats-panel {
+    padding: 1rem;
+  }
+
+  .stat-item {
+    font-size: 0.85rem;
+  }
+
+  .sidebar {
+    padding: 0.75rem;
+  }
+
+  .content-area {
+    padding: 0.75rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item,
+  .view-btn,
+  .btn,
+  .icon-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .anime-card:hover {
+    transform: none;
+  }
+
+  .anime-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .main-content {
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 200px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+  }
+
+  .nav {
+    flex-direction: column;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark mode support (system preference) */
+@media (prefers-color-scheme: light) {
+  /* If user prefers light mode, we could adjust, but keeping dark for anime aesthetic */
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .anime-card,
+  .sidebar,
+  .header {
+    border-width: 2px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .header-actions,
+  .sidebar,
+  .search-bar,
+  .view-controls,
+  .anime-actions,
+  .modal {
+    display: none !important;
+  }
+
+  .content-area {
+    padding: 0;
+  }
+
+  .anime-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
