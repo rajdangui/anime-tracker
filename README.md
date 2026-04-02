@@ -1,8 +1,70 @@
 # anime-tracker
 
-A beautiful and powerful CLI tool to track your anime watching progress with advanced UI/UX features.
+A beautiful and powerful tool to track your anime watching progress - available as both a **Desktop Application** and **CLI tool**.
 
-## ✨ Features
+## 🎯 Choose Your Version
+
+### 🖥️ Desktop Application (NEW!)
+
+**The modern way to track anime** - A native desktop application with a beautiful GUI and cloud sync capabilities.
+
+- ✨ Beautiful modern UI with gradients and smooth animations
+- ☁️ Optional Firebase cloud storage for cross-device sync
+- 📊 Real-time statistics dashboard
+- 🔍 Powerful search and filtering
+- 📱 Available for Windows, macOS, and Linux
+
+**[→ Desktop Application Documentation](README_DESKTOP.md)**
+
+```bash
+npm install
+npm run electron
+```
+
+### 💻 CLI Tool (Original)
+
+**For the terminal enthusiasts** - A feature-rich command-line interface with interactive menus.
+
+- 🎨 Beautiful terminal UI with colors and ASCII art
+- 📋 Fully interactive menu-driven interface
+- ⚡ Fast and lightweight
+- 💾 Local JSON storage
+
+**[Continue reading below for CLI documentation](#cli-features)**
+
+---
+
+## 🖥️ Desktop Application Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the desktop app:**
+   ```bash
+   npm run electron
+   ```
+
+3. **(Optional) Configure Firebase for cloud storage:**
+   - Create a Firebase project
+   - Enable Realtime Database
+   - Edit `src/firebase-config.js` with your credentials
+   - See [Desktop App README](README_DESKTOP.md) for details
+
+4. **Build installers:**
+   ```bash
+   npm run build        # Current platform
+   npm run build:win    # Windows
+   npm run build:mac    # macOS
+   npm run build:linux  # Linux
+   ```
+
+**Note:** The desktop app can work with local storage (default) or Firebase cloud storage. No configuration is required to start using it!
+
+---
+
+## 💻 CLI Features
 
 - 🎨 **Beautiful UI** - Colorful interface with gradients, boxes, and ASCII art
 - 📋 **Interactive Mode** - Fully interactive menu-driven interface

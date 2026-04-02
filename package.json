@@ -1,14 +1,46 @@
 {
   "name": "anime-tracker",
-  "version": "1.0.0",
-  "description": "A CLI tool to track your anime watching progress",
-  "main": "src/index.js",
+  "version": "2.0.0",
+  "description": "A desktop application to track your anime watching progress with online cloud storage",
+  "main": "electron/main.js",
   "bin": {
     "anime-tracker": "./src/index.js"
   },
   "scripts": {
     "start": "node src/index.js",
+    "electron": "electron .",
+    "electron-dev": "cross-env NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
     "test": "echo \"No tests specified yet\""
+  },
+  "build": {
+    "appId": "com.anime-tracker.app",
+    "productName": "Anime Tracker",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "src/storage.js",
+      "src/utils.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
   },
   "repository": {
     "type": "git",
@@ -17,7 +49,8 @@
   "keywords": [
     "anime",
     "tracker",
-    "cli",
+    "desktop",
+    "electron",
     "manga",
     "watchlist"
   ],
@@ -37,6 +70,12 @@
     "figlet": "^1.6.0",
     "gradient-string": "^2.0.2",
     "inquirer": "^8.2.5",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "firebase": "^10.7.1"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "cross-env": "^7.0.3"
   }
 }
