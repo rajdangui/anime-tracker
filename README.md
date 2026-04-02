@@ -1,17 +1,23 @@
 # anime-tracker
 
-A simple and powerful CLI tool to track your anime watching progress.
+A beautiful and powerful CLI tool to track your anime watching progress with advanced UI/UX features.
 
-## Features
+## ✨ Features
 
-- 📝 Add anime to your tracking list
-- 📺 Track watching status (watching, completed, plan-to-watch, dropped, on-hold)
-- ⭐ Rate your anime (0-10 scale)
-- 📋 Add notes and comments
-- 🔍 Search and filter your collection
-- 📊 View statistics about your anime list
+- 🎨 **Beautiful UI** - Colorful interface with gradients, boxes, and ASCII art
+- 📋 **Interactive Mode** - Fully interactive menu-driven interface
+- 📺 **Track Watching Status** - watching, completed, plan-to-watch, dropped, on-hold
+- ⭐ **Rate Your Anime** - 0-10 scale with visual star ratings
+- 📊 **Rich Statistics** - Visual progress bars and detailed analytics
+- 🔍 **Smart Search** - Search by title or notes
+- 🎯 **Progress Tracking** - Visual progress bars for episode tracking
+- 💬 **Add Notes** - Keep personal notes about each anime
+- 📱 **Two Modes** - Command-line mode OR interactive mode
+- 🌈 **Color-Coded Status** - Each status has its own color and emoji
+- 📈 **Table & Card Views** - View your list in different formats
+- ⚡ **Loading Animations** - Beautiful spinners for better UX
 
-## Installation
+## 📦 Installation
 
 1. Clone the repository:
 ```bash
@@ -29,127 +35,221 @@ npm install
 npm link
 ```
 
-## Usage
+## 🚀 Usage
 
-### Add an anime
+### Interactive Mode (Recommended)
 
-Add a new anime to your tracking list:
+Launch the interactive menu for the best experience:
 
 ```bash
-node src/index.js add "Attack on Titan"
+node src/index.js interactive
+# or
+node src/index.js i
 ```
 
-With additional options:
+The interactive mode provides:
+- ➕ Add Anime
+- 📋 List All Anime
+- 🔍 Search Anime
+- ✏️ Update Anime
+- 🗑️ Delete Anime
+- 📊 View Statistics
+- 🚪 Exit
 
+### Command-Line Mode
+
+#### Add an anime
+
+Interactive add (prompts for all fields):
 ```bash
-node src/index.js add "Attack on Titan" --status watching --episodes 25 --current 5 --rating 9.5 --notes "Amazing show!"
+node src/index.js add
+```
+
+Quick add with arguments:
+```bash
+node src/index.js add --title "Attack on Titan" --status watching --episodes 25 --current 5 --rating 9.5 --notes "Amazing show!"
 ```
 
 Options:
-- `-s, --status <status>`: Status (watching, completed, plan-to-watch, dropped, on-hold)
+- `-t, --title <title>`: Anime title (required for CLI mode)
+- `-s, --status <status>`: Status (default: plan-to-watch)
 - `-e, --episodes <number>`: Total number of episodes
-- `-c, --current <number>`: Current episode number
+- `-c, --current <number>`: Current episode number (default: 0)
 - `-r, --rating <number>`: Rating (0-10)
 - `-n, --notes <text>`: Notes about the anime
 
-### List all anime
+#### List all anime
 
-List all anime in your tracker:
-
+Default table view:
 ```bash
 node src/index.js list
 ```
 
-Filter by status:
+Card view with details:
+```bash
+node src/index.js list --view cards
+```
 
+Filter by status:
 ```bash
 node src/index.js list --status watching
 node src/index.js list --status completed
 ```
 
-### Search for anime
+Options:
+- `-s, --status <status>`: Filter by status
+- `-v, --view <type>`: View type (table or cards, default: table)
 
-Search by title or notes:
+#### Search for anime
 
+Interactive search:
+```bash
+node src/index.js search
+```
+
+Quick search:
 ```bash
 node src/index.js search "titan"
 ```
 
-### Update an anime
+#### Update an anime
 
-Update an existing anime entry:
+Interactive update (select from list):
+```bash
+node src/index.js update
+```
 
+Update specific anime with ID:
+```bash
+node src/index.js update <id>
+```
+
+Quick update with arguments:
 ```bash
 node src/index.js update <id> --current 10
 node src/index.js update <id> --status completed --rating 9
 node src/index.js update <id> --notes "Best anime ever!"
 ```
 
-### Delete an anime
+Options:
+- `-t, --title <title>`: Update title
+- `-s, --status <status>`: Update status
+- `-e, --episodes <number>`: Update total episodes
+- `-c, --current <number>`: Update current episode
+- `-r, --rating <number>`: Update rating
+- `-n, --notes <text>`: Update notes
 
-Remove an anime from your list:
+#### Delete an anime
 
+Interactive delete (select from list):
+```bash
+node src/index.js delete
+```
+
+Delete specific anime:
 ```bash
 node src/index.js delete <id>
 ```
 
-### View statistics
+Force delete (skip confirmation):
+```bash
+node src/index.js delete <id> --force
+```
 
-See statistics about your anime collection:
+#### View statistics
 
+See beautiful statistics with progress bars:
 ```bash
 node src/index.js stats
 ```
 
-### Get help
+Shows:
+- Total anime count
+- Total episodes watched
+- Average rating
+- Status breakdown with visual bars
+- Percentage distribution
+
+#### Get help
 
 Display all available commands:
-
 ```bash
 node src/index.js --help
 ```
 
 Get help for a specific command:
-
 ```bash
 node src/index.js add --help
+node src/index.js list --help
 ```
 
-## Status Values
+## 📊 Status Values
 
-The following status values are supported:
-- `watching` - Currently watching
-- `completed` - Finished watching
-- `plan-to-watch` - Planning to watch
-- `dropped` - Stopped watching
-- `on-hold` - Temporarily paused
+The following status values are supported, each with unique colors and emojis:
+- 📺 `watching` - Currently watching (Cyan)
+- ✅ `completed` - Finished watching (Green)
+- 📋 `plan-to-watch` - Planning to watch (Yellow)
+- ⏸️ `on-hold` - Temporarily paused (Magenta)
+- ❌ `dropped` - Stopped watching (Red)
 
-## Data Storage
+## 💾 Data Storage
 
-Your anime list is stored locally in `~/.anime-tracker/anime-list.json`. This file is created automatically when you add your first anime.
+Your anime list is stored locally in `~/.anime-tracker/anime-list.json`. This file is created automatically when you add your first anime. All data is stored locally on your machine.
 
-## Examples
+## 🎯 Examples
 
 ```bash
-# Add an anime you're planning to watch
-node src/index.js add "One Piece" --status plan-to-watch --episodes 1000
+# Launch interactive mode for the best experience
+node src/index.js interactive
 
-# Start watching it
-node src/index.js update 1 --status watching --current 1
+# Quick add an anime you're planning to watch
+node src/index.js add --title "One Piece" --status plan-to-watch --episodes 1000
 
-# Update progress
+# Start watching it (interactive mode)
+node src/index.js update
+
+# Update progress with CLI
 node src/index.js update 1 --current 50
 
 # Complete and rate it
 node src/index.js update 1 --status completed --rating 9.5 --notes "Epic adventure!"
 
-# View all completed anime
-node src/index.js list --status completed
+# View all completed anime in card format
+node src/index.js list --status completed --view cards
 
-# Check your statistics
+# Search for anime
+node src/index.js search "one piece"
+
+# Check your beautiful statistics
 node src/index.js stats
 ```
 
-## License
+## 🎨 UI/UX Features
+
+- **ASCII Art Banner** - Beautiful gradient header on every command
+- **Color-Coded Display** - Different colors for different statuses
+- **Progress Bars** - Visual representation of episode progress
+- **Star Ratings** - Visual star display for ratings (★★★★★)
+- **Loading Spinners** - Smooth animations during operations
+- **Boxed Output** - Clean bordered displays for cards
+- **Table View** - Professional table format for lists
+- **Interactive Menus** - Easy-to-use selection menus
+- **Confirmation Prompts** - Safety confirmations for destructive actions
+- **Success/Error Messages** - Clear feedback with colored boxes
+
+## 🛠️ Technologies Used
+
+- **Node.js** - Runtime environment
+- **Commander.js** - CLI framework
+- **Inquirer.js** - Interactive prompts
+- **Chalk** - Terminal colors
+- **Boxen** - Bordered boxes
+- **cli-table3** - Beautiful tables
+- **Ora** - Loading spinners
+- **Figlet** - ASCII art text
+- **Gradient-string** - Gradient colors
+- **cli-progress** - Progress bars
+
+## 📝 License
 
 ISC

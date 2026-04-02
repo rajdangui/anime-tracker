@@ -183,7 +183,9 @@ function displayStatistics(animeList) {
 
   // Header
   console.log('\n' + gradient.pastel('═'.repeat(60)));
-  console.log(gradient.pastel.center('📊  YOUR ANIME STATISTICS  📊'));
+  const headerText = '📊  YOUR ANIME STATISTICS  📊';
+  const padding = Math.floor((60 - headerText.length) / 2);
+  console.log(' '.repeat(padding) + gradient.pastel(headerText));
   console.log(gradient.pastel('═'.repeat(60)) + '\n');
 
   // Overall stats
