@@ -16,7 +16,53 @@ const animeForm = document.getElementById('animeForm');
 document.addEventListener('DOMContentLoaded', () => {
   loadAnimeList();
   setupEventListeners();
+  setupScrollEffects();
 });
+
+// Scroll effects for scrollytelling
+function setupScrollEffects() {
+  const header = document.querySelector('.header');
+  const contentArea = document.querySelector('.content-area');
+
+  if (contentArea) {
+    contentArea.addEventListener('scroll', () => {
+      if (contentArea.scrollTop > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+  }
+
+  // Intersection Observer for fade-in animations on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  // Observe anime cards as they're added
+  const observeCards = () => {
+    document.querySelectorAll('.anime-card').forEach(card => {
+      observer.observe(card);
+    });
+  };
+
+  // Call it initially and whenever cards are updated
+  const originalDisplayAnimeGrid = displayAnimeGrid;
+  window.displayAnimeGrid = function(anime) {
+    originalDisplayAnimeGrid(anime);
+    setTimeout(observeCards, 50);
+  };
+}
 
 // Event Listeners
 function setupEventListeners() {
@@ -67,10 +113,10 @@ function setupEventListeners() {
   });
 }
 
-// Load anime list from backend
+// Load anime list from storage
 async function loadAnimeList() {
   try {
-    animeList = await window.animeAPI.getAnimeList();
+    animeList = await window.animeStorage.getAnimeList();
     filterAndDisplayAnime();
     updateStatistics();
   } catch (error) {
@@ -282,10 +328,10 @@ async function handleFormSubmit(e) {
 
   try {
     if (editingAnimeId) {
-      await window.animeAPI.updateAnime(editingAnimeId, animeData);
+      await window.animeStorage.updateAnime(editingAnimeId, animeData);
       showNotification('Anime updated successfully!', 'success');
     } else {
-      await window.animeAPI.addAnime(animeData);
+      await window.animeStorage.addAnime(animeData);
       showNotification('Anime added successfully!', 'success');
     }
 
@@ -302,7 +348,7 @@ async function handleDelete() {
   if (!editingAnimeId) return;
 
   try {
-    await window.animeAPI.deleteAnime(editingAnimeId);
+    await window.animeStorage.deleteAnime(editingAnimeId);
     showNotification('Anime deleted successfully!', 'success');
     await loadAnimeList();
     closeModals();

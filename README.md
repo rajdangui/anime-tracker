@@ -1,317 +1,282 @@
-# anime-tracker
+# 🎌 Anime Tracker
 
-A beautiful and powerful tool to track your anime watching progress - available as both a **Desktop Application** and **CLI tool**.
+A beautiful, responsive web application to track your anime watching progress. Works seamlessly on desktop and mobile devices with smooth scrollytelling effects and optional cloud storage.
 
-## 🎯 Choose Your Version
+![Version](https://img.shields.io/badge/version-3.0.0-blue)
+![License](https://img.shields.io/badge/license-ISC-green)
+![Responsive](https://img.shields.io/badge/responsive-yes-brightgreen)
 
-### 🖥️ Desktop Application (NEW!)
+## ✨ Features
 
-**The modern way to track anime** - A native desktop application with a beautiful GUI and cloud sync capabilities.
+### 🎨 Modern UI/UX
+- **Responsive Design** - Perfect experience on desktop, tablet, and mobile devices
+- **Scrollytelling Effects** - Smooth animations and transitions as you scroll
+- **Dark Theme** - Eye-friendly gradient design optimized for anime aesthetics
+- **Touch-Optimized** - Enhanced touch interactions for mobile devices
 
-- ✨ Beautiful modern UI with gradients and smooth animations
-- ☁️ Optional Firebase cloud storage for cross-device sync
-- 📊 Real-time statistics dashboard
-- 🔍 Powerful search and filtering
-- 📱 Available for Windows, macOS, and Linux
+### 📊 Tracking Features
+- **Track Watching Status** - watching, completed, plan-to-watch, dropped, on-hold
+- **Episode Progress** - Visual progress bars for episode tracking
+- **Rating System** - Rate your anime from 0-10 with visual star display
+- **Personal Notes** - Keep notes about each anime
+- **Smart Search** - Search by title or notes instantly
+- **Filter by Status** - Quick filters for each watching status
 
-**[→ Desktop Application Documentation](README_DESKTOP.md)**
+### 💾 Storage Options
+- **Local Storage** - Works offline with browser localStorage (default)
+- **Cloud Storage** - Optional Firebase integration for cross-device sync
+- **No Account Required** - Start tracking immediately with local storage
 
-```bash
-npm install
-npm run electron
-```
+### 🎯 Ergonomic Design
+- Smooth scroll behavior with parallax effects
+- Fade-in animations as elements appear
+- Grid and table view options
+- Accessible design following WCAG guidelines
+- Touch-friendly buttons (44px minimum)
+- Optimized for reduced motion preferences
 
-### 💻 CLI Tool (Original)
+## 🚀 Quick Start
 
-**For the terminal enthusiasts** - A feature-rich command-line interface with interactive menus.
+### Prerequisites
+- Node.js 14+ installed
+- A modern web browser
 
-- 🎨 Beautiful terminal UI with colors and ASCII art
-- 📋 Fully interactive menu-driven interface
-- ⚡ Fast and lightweight
-- 💾 Local JSON storage
+### Installation
 
-**[Continue reading below for CLI documentation](#cli-features)**
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/rajdangui/anime-tracker.git
+   cd anime-tracker
+   ```
 
----
-
-## 🖥️ Desktop Application Quick Start
-
-1. **Install dependencies:**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Run the desktop app:**
+3. **Start the server:**
    ```bash
-   npm run electron
+   npm start
    ```
 
-3. **(Optional) Configure Firebase for cloud storage:**
-   - Create a Firebase project
+4. **Open in browser:**
+   ```
+   Desktop: http://localhost:3000
+   Mobile: http://[your-local-ip]:3000
+   ```
+
+That's it! The app is ready to use with local storage.
+
+## 📱 Mobile Access
+
+To access from your phone on the same network:
+
+1. Find your computer's local IP address:
+   - **Windows:** `ipconfig` → Look for IPv4 Address
+   - **Mac/Linux:** `ifconfig` or `ip addr` → Look for inet address
+   - Example: `192.168.1.100`
+
+2. On your phone, open: `http://192.168.1.100:3000`
+
+3. For easier access, add to your phone's home screen:
+   - **iOS:** Share → Add to Home Screen
+   - **Android:** Menu → Add to Home Screen
+
+## ☁️ Optional: Firebase Cloud Storage
+
+To enable cross-device sync with Firebase:
+
+1. **Create a Firebase project:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project
    - Enable Realtime Database
-   - Edit `src/firebase-config.js` with your credentials
-   - See [Desktop App README](README_DESKTOP.md) for details
 
-4. **Build installers:**
-   ```bash
-   npm run build        # Current platform
-   npm run build:win    # Windows
-   npm run build:mac    # macOS
-   npm run build:linux  # Linux
+2. **Get your config:**
+   - Project Settings → General → Your apps
+   - Copy the Firebase configuration
+
+3. **Update the config:**
+   - Edit `public/js/storage.js`
+   - Replace the Firebase config object (around line 24):
+   ```javascript
+   const firebaseConfig = {
+     apiKey: "your-api-key",
+     authDomain: "your-auth-domain",
+     databaseURL: "your-database-url",
+     projectId: "your-project-id",
+     storageBucket: "your-storage-bucket",
+     messagingSenderId: "your-sender-id",
+     appId: "your-app-id"
+   };
    ```
 
-**Note:** The desktop app can work with local storage (default) or Firebase cloud storage. No configuration is required to start using it!
+4. **Restart the server** and your data will now sync to Firebase!
 
----
+## 🎮 Usage
 
-## 💻 CLI Features
+### Adding Anime
+1. Click the **"➕ Add Anime"** button
+2. Fill in the details:
+   - Title (required)
+   - Status (watching, completed, etc.)
+   - Total episodes
+   - Current episode
+   - Rating (0-10)
+   - Personal notes
+3. Click **"Add Anime"**
 
-- 🎨 **Beautiful UI** - Colorful interface with gradients, boxes, and ASCII art
-- 📋 **Interactive Mode** - Fully interactive menu-driven interface
-- 📺 **Track Watching Status** - watching, completed, plan-to-watch, dropped, on-hold
-- ⭐ **Rate Your Anime** - 0-10 scale with visual star ratings
-- 📊 **Rich Statistics** - Visual progress bars and detailed analytics
-- 🔍 **Smart Search** - Search by title or notes
-- 🎯 **Progress Tracking** - Visual progress bars for episode tracking
-- 💬 **Add Notes** - Keep personal notes about each anime
-- 📱 **Two Modes** - Command-line mode OR interactive mode
-- 🌈 **Color-Coded Status** - Each status has its own color and emoji
-- 📈 **Table & Card Views** - View your list in different formats
-- ⚡ **Loading Animations** - Beautiful spinners for better UX
+### Viewing Your List
+- **Filter by Status:** Click any status button in the sidebar
+- **Search:** Type in the search bar to filter by title or notes
+- **Switch Views:** Toggle between Grid and Table view
+- **See Statistics:** Real-time stats in the sidebar
 
-## 📦 Installation
+### Updating Progress
+1. Click the **✏️ edit icon** on any anime card
+2. Update the fields you want to change
+3. Click **"Update Anime"**
 
-1. Clone the repository:
-```bash
-git clone https://github.com/rajdangui/anime-tracker.git
-cd anime-tracker
-```
+### Deleting Anime
+1. Click the **🗑️ delete icon** on any anime card
+2. Confirm the deletion
 
-2. Install dependencies:
-```bash
-npm install
-```
+## 📊 Status Types
 
-3. (Optional) Link the CLI globally:
-```bash
-npm link
-```
+| Emoji | Status | Description |
+|-------|--------|-------------|
+| 📺 | Watching | Currently watching |
+| ✅ | Completed | Finished watching |
+| 📋 | Plan to Watch | Planning to watch |
+| ⏸️ | On Hold | Temporarily paused |
+| ❌ | Dropped | Stopped watching |
 
-## 🚀 Usage
+## 🎨 Responsive Breakpoints
 
-### Interactive Mode (Recommended)
+- **Desktop:** 1024px and above - Full sidebar and grid layout
+- **Tablet:** 768px - 1024px - Adapted layout
+- **Mobile:** Below 768px - Stacked layout with horizontal scrolling filters
+- **Small Mobile:** Below 480px - Optimized for small screens
 
-Launch the interactive menu for the best experience:
+## 🌐 Browser Support
 
-```bash
-node src/index.js interactive
-# or
-node src/index.js i
-```
-
-The interactive mode provides:
-- ➕ Add Anime
-- 📋 List All Anime
-- 🔍 Search Anime
-- ✏️ Update Anime
-- 🗑️ Delete Anime
-- 📊 View Statistics
-- 🚪 Exit
-
-### Command-Line Mode
-
-#### Add an anime
-
-Interactive add (prompts for all fields):
-```bash
-node src/index.js add
-```
-
-Quick add with arguments:
-```bash
-node src/index.js add --title "Attack on Titan" --status watching --episodes 25 --current 5 --rating 9.5 --notes "Amazing show!"
-```
-
-Options:
-- `-t, --title <title>`: Anime title (required for CLI mode)
-- `-s, --status <status>`: Status (default: plan-to-watch)
-- `-e, --episodes <number>`: Total number of episodes
-- `-c, --current <number>`: Current episode number (default: 0)
-- `-r, --rating <number>`: Rating (0-10)
-- `-n, --notes <text>`: Notes about the anime
-
-#### List all anime
-
-Default table view:
-```bash
-node src/index.js list
-```
-
-Card view with details:
-```bash
-node src/index.js list --view cards
-```
-
-Filter by status:
-```bash
-node src/index.js list --status watching
-node src/index.js list --status completed
-```
-
-Options:
-- `-s, --status <status>`: Filter by status
-- `-v, --view <type>`: View type (table or cards, default: table)
-
-#### Search for anime
-
-Interactive search:
-```bash
-node src/index.js search
-```
-
-Quick search:
-```bash
-node src/index.js search "titan"
-```
-
-#### Update an anime
-
-Interactive update (select from list):
-```bash
-node src/index.js update
-```
-
-Update specific anime with ID:
-```bash
-node src/index.js update <id>
-```
-
-Quick update with arguments:
-```bash
-node src/index.js update <id> --current 10
-node src/index.js update <id> --status completed --rating 9
-node src/index.js update <id> --notes "Best anime ever!"
-```
-
-Options:
-- `-t, --title <title>`: Update title
-- `-s, --status <status>`: Update status
-- `-e, --episodes <number>`: Update total episodes
-- `-c, --current <number>`: Update current episode
-- `-r, --rating <number>`: Update rating
-- `-n, --notes <text>`: Update notes
-
-#### Delete an anime
-
-Interactive delete (select from list):
-```bash
-node src/index.js delete
-```
-
-Delete specific anime:
-```bash
-node src/index.js delete <id>
-```
-
-Force delete (skip confirmation):
-```bash
-node src/index.js delete <id> --force
-```
-
-#### View statistics
-
-See beautiful statistics with progress bars:
-```bash
-node src/index.js stats
-```
-
-Shows:
-- Total anime count
-- Total episodes watched
-- Average rating
-- Status breakdown with visual bars
-- Percentage distribution
-
-#### Get help
-
-Display all available commands:
-```bash
-node src/index.js --help
-```
-
-Get help for a specific command:
-```bash
-node src/index.js add --help
-node src/index.js list --help
-```
-
-## 📊 Status Values
-
-The following status values are supported, each with unique colors and emojis:
-- 📺 `watching` - Currently watching (Cyan)
-- ✅ `completed` - Finished watching (Green)
-- 📋 `plan-to-watch` - Planning to watch (Yellow)
-- ⏸️ `on-hold` - Temporarily paused (Magenta)
-- ❌ `dropped` - Stopped watching (Red)
-
-## 💾 Data Storage
-
-Your anime list is stored locally in `~/.anime-tracker/anime-list.json`. This file is created automatically when you add your first anime. All data is stored locally on your machine.
-
-## 🎯 Examples
-
-```bash
-# Launch interactive mode for the best experience
-node src/index.js interactive
-
-# Quick add an anime you're planning to watch
-node src/index.js add --title "One Piece" --status plan-to-watch --episodes 1000
-
-# Start watching it (interactive mode)
-node src/index.js update
-
-# Update progress with CLI
-node src/index.js update 1 --current 50
-
-# Complete and rate it
-node src/index.js update 1 --status completed --rating 9.5 --notes "Epic adventure!"
-
-# View all completed anime in card format
-node src/index.js list --status completed --view cards
-
-# Search for anime
-node src/index.js search "one piece"
-
-# Check your beautiful statistics
-node src/index.js stats
-```
-
-## 🎨 UI/UX Features
-
-- **ASCII Art Banner** - Beautiful gradient header on every command
-- **Color-Coded Display** - Different colors for different statuses
-- **Progress Bars** - Visual representation of episode progress
-- **Star Ratings** - Visual star display for ratings (★★★★★)
-- **Loading Spinners** - Smooth animations during operations
-- **Boxed Output** - Clean bordered displays for cards
-- **Table View** - Professional table format for lists
-- **Interactive Menus** - Easy-to-use selection menus
-- **Confirmation Prompts** - Safety confirmations for destructive actions
-- **Success/Error Messages** - Clear feedback with colored boxes
+- ✅ Chrome/Edge (latest)
+- ✅ Firefox (latest)
+- ✅ Safari (latest)
+- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
 
 ## 🛠️ Technologies Used
 
-- **Node.js** - Runtime environment
-- **Commander.js** - CLI framework
-- **Inquirer.js** - Interactive prompts
-- **Chalk** - Terminal colors
-- **Boxen** - Bordered boxes
-- **cli-table3** - Beautiful tables
-- **Ora** - Loading spinners
-- **Figlet** - ASCII art text
-- **Gradient-string** - Gradient colors
-- **cli-progress** - Progress bars
+### Frontend
+- **Vanilla JavaScript** - No frameworks, pure performance
+- **CSS3** - Modern responsive design with animations
+- **HTML5** - Semantic markup
 
-## 📝 License
+### Backend
+- **Express.js** - Fast, minimal web server
+- **Helmet.js** - Security headers
+- **Compression** - Gzip compression for better performance
 
-ISC
+### Storage
+- **localStorage** - Browser-based storage (default)
+- **Firebase Realtime Database** - Optional cloud storage
+
+## 📂 Project Structure
+
+```
+anime-tracker/
+├── public/              # Web application files
+│   ├── css/
+│   │   └── styles.css   # Responsive styles with scrollytelling
+│   ├── js/
+│   │   ├── app.js       # Main application logic
+│   │   └── storage.js   # Storage abstraction layer
+│   ├── assets/          # Images and icons
+│   └── index.html       # Single page application
+├── server.js            # Express web server
+├── package.json         # Dependencies and scripts
+└── README.md           # This file
+```
+
+## 🔒 Security
+
+- Content Security Policy (CSP) enabled
+- Helmet.js for security headers
+- No backend storage of personal data
+- Data stored locally or in your own Firebase
+
+## 🎯 Accessibility
+
+- Semantic HTML for screen readers
+- ARIA labels where appropriate
+- Keyboard navigation support
+- Respects `prefers-reduced-motion`
+- High contrast mode support
+- Touch targets minimum 44px
+
+## 📝 Development
+
+### Run in development mode:
+```bash
+npm run dev
+```
+
+### Environment variables:
+```bash
+PORT=3000  # Change the port (optional)
+```
+
+## 🚀 Deployment
+
+### Deploy to any hosting service:
+
+**Vercel:**
+```bash
+npm install -g vercel
+vercel
+```
+
+**Heroku:**
+```bash
+git push heroku main
+```
+
+**Netlify:**
+```bash
+npm install -g netlify-cli
+netlify deploy
+```
+
+**Traditional Hosting:**
+Just upload the `public/` folder to any static hosting service!
+
+## 🎬 Scrollytelling Effects
+
+The app features smooth scrollytelling animations:
+- **Fade-in animations** as cards appear in viewport
+- **Parallax header** that changes on scroll
+- **Staggered card animations** for visual appeal
+- **Smooth scroll behavior** throughout
+- **Intersection Observer API** for performance
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest features
+- Submit pull requests
+
+## 📄 License
+
+ISC License - feel free to use this project for personal or commercial purposes.
+
+## 🙏 Acknowledgments
+
+- Inspired by the anime tracking community
+- Built with modern web standards
+- Designed for anime enthusiasts
+
+---
+
+**Enjoy tracking your anime journey! 🎌✨**
+
+For issues or questions, visit: https://github.com/rajdangui/anime-tracker/issues

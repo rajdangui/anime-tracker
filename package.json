@@ -1,46 +1,12 @@
 {
   "name": "anime-tracker",
-  "version": "2.0.0",
-  "description": "A desktop application to track your anime watching progress with online cloud storage",
-  "main": "electron/main.js",
-  "bin": {
-    "anime-tracker": "./src/index.js"
-  },
+  "version": "3.0.0",
+  "description": "A beautiful responsive web application to track your anime watching progress with cloud storage support",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/index.js",
-    "electron": "electron .",
-    "electron-dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
+    "start": "node server.js",
+    "dev": "node server.js",
     "test": "echo \"No tests specified yet\""
-  },
-  "build": {
-    "appId": "com.anime-tracker.app",
-    "productName": "Anime Tracker",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron/**/*",
-      "renderer/**/*",
-      "src/storage.js",
-      "src/utils.js",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.png"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/icon.png"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
-    }
   },
   "repository": {
     "type": "git",
@@ -49,33 +15,23 @@
   "keywords": [
     "anime",
     "tracker",
-    "desktop",
-    "electron",
+    "web-app",
+    "responsive",
+    "progressive-web-app",
     "manga",
-    "watchlist"
+    "watchlist",
+    "firebase"
   ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/rajdangui/anime-tracker/issues"
   },
   "homepage": "https://github.com/rajdangui/anime-tracker#readme",
   "dependencies": {
-    "boxen": "^5.1.2",
-    "chalk": "^4.1.2",
-    "cli-progress": "^3.12.0",
-    "cli-table3": "^0.6.3",
-    "commander": "^12.0.0",
-    "figlet": "^1.6.0",
-    "gradient-string": "^2.0.2",
-    "inquirer": "^8.2.5",
-    "ora": "^5.4.1",
-    "firebase": "^10.7.1"
+    "express": "^4.18.2",
+    "compression": "^1.7.4",
+    "helmet": "^7.1.0"
   },
-  "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1",
-    "cross-env": "^7.0.3"
-  }
+  "devDependencies": {}
 }
