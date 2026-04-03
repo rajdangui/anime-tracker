@@ -281,4 +281,5 @@ ISC License - feel free to use this project for personal or commercial purposes.
 
 For issues or questions, visit: https://github.com/rajdangui/anime-tracker/issues
 #   a n i m e - t r a c k e r  
+ #   a n i m e - t r a c k e r  
  
