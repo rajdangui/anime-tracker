@@ -12,10 +12,12 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.googleapis.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcAttr: ["'unsafe-inline'"],
+      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.googleapis.com", "https://api.jikan.moe"],
       imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "data:"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
     },
   },
 }));
@@ -25,7 +27,7 @@ app.use(compression());
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1d',
+  maxAge: '0',
   etag: true,
 }));
 

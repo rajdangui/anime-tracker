@@ -1,286 +1,639 @@
-// State
+// ═══════════════════════════════════════════════════
+// ANIME TRACKER — APP CONTROLLER
+// Scrollytelling + Jikan API Auto-Fetch
+// ═══════════════════════════════════════════════════
+
+// ─── State ───
 let animeList = [];
 let currentView = 'all';
-let currentLayout = 'grid';
 let editingAnimeId = null;
+let selectedJikanAnime = null;
+let searchTimeout = null;
+let currentRating = 0;
 
-// DOM Elements
-const animeContainer = document.getElementById('animeContainer');
-const emptyState = document.getElementById('emptyState');
-const searchInput = document.getElementById('searchInput');
-const animeModal = document.getElementById('animeModal');
-const deleteModal = document.getElementById('deleteModal');
-const animeForm = document.getElementById('animeForm');
+// ─── DOM Cache ───
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
 
-// Initialize app
+let DOM = {};
+
+// ═══════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize DOM cache after elements exist
+  DOM = {
+    navbar: $('#navbar'),
+    animeContainer: $('#animeContainer'),
+    emptyState: $('#emptyState'),
+    searchInput: $('#searchInput'),
+    animeModal: $('#animeModal'),
+    deleteModal: $('#deleteModal'),
+    animeForm: $('#animeForm'),
+    sectionTitle: $('#sectionTitle'),
+    sectionCount: $('#sectionCount'),
+    searchBarContainer: $('#searchBarContainer'),
+    searchResults: $('#searchResults'),
+    searchSpinner: $('#searchSpinner'),
+    selectedPreview: $('#selectedPreview'),
+    toastContainer: $('#toastContainer'),
+    heroParticles: $('#heroParticles'),
+  };
   loadAnimeList();
   setupEventListeners();
   setupScrollEffects();
+  generateParticles();
 });
 
-// Scroll effects for scrollytelling
-function setupScrollEffects() {
-  const header = document.querySelector('.header');
-  const contentArea = document.querySelector('.content-area');
+// ═══════════════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════════════
 
-  if (contentArea) {
-    contentArea.addEventListener('scroll', () => {
-      if (contentArea.scrollTop > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-    });
-  }
-
-  // Intersection Observer for fade-in animations on scroll
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, observerOptions);
-
-  // Observe anime cards as they're added
-  const observeCards = () => {
-    document.querySelectorAll('.anime-card').forEach(card => {
-      observer.observe(card);
-    });
-  };
-
-  // Call it initially and whenever cards are updated
-  const originalDisplayAnimeGrid = displayAnimeGrid;
-  window.displayAnimeGrid = function(anime) {
-    originalDisplayAnimeGrid(anime);
-    setTimeout(observeCards, 50);
-  };
-}
-
-// Event Listeners
 function setupEventListeners() {
-  // Add anime button
-  document.getElementById('addAnimeBtn').addEventListener('click', openAddModal);
-  document.getElementById('emptyAddBtn').addEventListener('click', openAddModal);
+  // ─── Add Anime Buttons ───
+  $('#addAnimeBtn').addEventListener('click', openAddModal);
+  $('#emptyAddBtn').addEventListener('click', openAddModal);
+  $('#fabAdd').addEventListener('click', openAddModal);
 
-  // Navigation
-  document.querySelectorAll('.nav-item').forEach(btn => {
+  // ─── Search Result Selection (Event Delegation) ───
+  // Use 'click' event — simpler and more reliable than mousedown
+  DOM.searchResults.addEventListener('click', (e) => {
+    const item = e.target.closest('.search-result-item');
+    if (!item) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const idx = parseInt(item.dataset.index);
+    if (isNaN(idx)) return;
+    const anime = _jikanCache[idx];
+    if (!anime) return;
+
+    const img = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+    const title = anime.title_english || anime.title || '';
+    const episodes = anime.episodes || 0;
+    const year = anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '';
+    const meta = [year, episodes ? `${episodes} eps` : '', anime.type].filter(Boolean).join(' · ');
+
+    selectJikanResult(anime.mal_id, title, img, episodes, meta);
+  });
+
+  // Also handle mousedown to prevent input blur before click fires
+  DOM.searchResults.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
+
+  // ─── Card Actions (Event Delegation) ───
+  DOM.animeContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const animeId = parseInt(btn.dataset.animeId);
+    if (action === 'edit') {
+      openEditModal(animeId);
+    } else if (action === 'delete') {
+      const title = btn.dataset.animeTitle || '';
+      openDeleteModal(animeId, title);
+    }
+  });
+
+  // ─── Filter Pills (both desktop & mobile) ───
+  $$('.filter-pill').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentView = e.target.dataset.view;
-      filterAndDisplayAnime();
+      const view = e.currentTarget.dataset.view;
+      setActiveFilter(view);
     });
   });
 
-  // View layout toggle
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentLayout = e.target.dataset.layout;
-      displayAnime(getFilteredAnime());
-    });
+  // ─── Search Toggle ───
+  $('#searchToggle').addEventListener('click', () => {
+    DOM.searchBarContainer.classList.toggle('open');
+    if (DOM.searchBarContainer.classList.contains('open')) {
+      DOM.searchInput.focus();
+    }
   });
 
-  // Search
-  searchInput.addEventListener('input', handleSearch);
+  $('#searchClose').addEventListener('click', () => {
+    DOM.searchBarContainer.classList.remove('open');
+    DOM.searchInput.value = '';
+    filterAndDisplayAnime();
+  });
 
-  // Modal controls
-  document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
+  // ─── Search Input ───
+  DOM.searchInput.addEventListener('input', debounce(() => {
+    filterAndDisplayAnime();
+  }, 200));
+
+  // ─── Modal Close Buttons ───
+  $$('.modal-close-btn, .modal-cancel').forEach(btn => {
     btn.addEventListener('click', closeModals);
   });
 
-  // Form submit
-  animeForm.addEventListener('submit', handleFormSubmit);
-
-  // Delete confirmation
-  document.getElementById('confirmDelete').addEventListener('click', handleDelete);
-
-  // Close modal on outside click
-  animeModal.addEventListener('click', (e) => {
-    if (e.target === animeModal) closeModals();
+  // ─── Close modal on overlay click ───
+  DOM.animeModal.addEventListener('click', (e) => {
+    if (e.target === DOM.animeModal) closeModals();
   });
-  deleteModal.addEventListener('click', (e) => {
-    if (e.target === deleteModal) closeModals();
+  DOM.deleteModal.addEventListener('click', (e) => {
+    if (e.target === DOM.deleteModal) closeModals();
+  });
+
+  // ─── Form Submit ───
+  DOM.animeForm.addEventListener('submit', handleFormSubmit);
+
+  // ─── Delete Confirmation ───
+  $('#confirmDelete').addEventListener('click', handleDelete);
+
+  // ─── Anime Title Search (Jikan API) ───
+  const animeTitle = $('#animeTitle');
+  animeTitle.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    if (query.length < 3) {
+      DOM.searchResults.classList.remove('open');
+      DOM.searchSpinner.classList.remove('active');
+      return;
+    }
+    DOM.searchSpinner.classList.add('active');
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => searchJikanAnime(query), 500);
+  });
+
+  // ─── Enter key in title field: select first result or submit ───
+  animeTitle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (_jikanCache && _jikanCache.length > 0 && DOM.searchResults.classList.contains('open')) {
+        const anime = _jikanCache[0];
+        const img = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+        const title = anime.title_english || anime.title || '';
+        const episodes = anime.episodes || 0;
+        const year = anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '';
+        const meta = [year, episodes ? `${episodes} eps` : '', anime.type].filter(Boolean).join(' · ');
+        selectJikanResult(anime.mal_id, title, img, episodes, meta);
+      }
+    }
+  });
+
+  // ─── Block form submission on Enter inside inputs (not submit button) ───
+  DOM.animeForm.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault();
+    }
+  });
+
+  // Close search results on click outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-group')) {
+      DOM.searchResults.classList.remove('open');
+    }
+  });
+
+  // ─── Clear Selection ───
+  $('#clearSelection').addEventListener('click', clearAnimeSelection);
+
+  // ─── Star Rating ───
+  setupStarRating();
+
+  // ─── Keyboard shortcuts ───
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModals();
   });
 }
 
-// Load anime list from storage
+// ═══════════════════════════════════════════════════
+// SCROLL EFFECTS
+// ═══════════════════════════════════════════════════
+
+function setupScrollEffects() {
+  // ─── Navbar scroll state ───
+  const hero = $('#hero');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) {
+        DOM.navbar.classList.add('scrolled');
+      } else {
+        DOM.navbar.classList.remove('scrolled');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  if (hero) observer.observe(hero);
+
+  // ─── Card reveal on scroll ───
+  setupCardObserver();
+}
+
+function setupCardObserver() {
+  const cardObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        // Stagger the reveal
+        const card = entry.target;
+        const delay = Array.from(card.parentElement.children).indexOf(card) % 6;
+        setTimeout(() => {
+          card.classList.add('visible');
+        }, delay * 80);
+        cardObserver.unobserve(card);
+      }
+    });
+  }, {
+    threshold: 0.05,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  window._cardObserver = cardObserver;
+}
+
+function observeCards() {
+  const cards = $$('.anime-card');
+  cards.forEach(card => {
+    if (!card.classList.contains('visible')) {
+      window._cardObserver.observe(card);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// HERO PARTICLES
+// ═══════════════════════════════════════════════════
+
+function generateParticles() {
+  if (!DOM.heroParticles) return;
+  for (let i = 0; i < 30; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'hero-particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.animationDelay = Math.random() * 6 + 's';
+    particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+    particle.style.width = (1 + Math.random() * 2) + 'px';
+    particle.style.height = particle.style.width;
+    DOM.heroParticles.appendChild(particle);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// DATA LOADING & DISPLAY
+// ═══════════════════════════════════════════════════
+
 async function loadAnimeList() {
   try {
     animeList = await window.animeStorage.getAnimeList();
     filterAndDisplayAnime();
-    updateStatistics();
+    updateHeroStats();
   } catch (error) {
     console.error('Error loading anime list:', error);
-    showNotification('Error loading anime list', 'error');
+    showToast('Error loading anime list', 'error');
   }
 }
 
-// Filter and display anime based on current view
+function setActiveFilter(view) {
+  currentView = view;
+
+  // Update both desktop and mobile pills
+  $$('.filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+
+  // Update section title
+  const titles = {
+    'all': 'Your Collection',
+    'watching': 'Currently Watching',
+    'completed': 'Completed',
+    'plan-to-watch': 'Plan to Watch',
+    'on-hold': 'On Hold',
+    'dropped': 'Dropped'
+  };
+  DOM.sectionTitle.textContent = titles[view] || 'Your Collection';
+
+  filterAndDisplayAnime();
+}
+
 function filterAndDisplayAnime() {
   const filtered = getFilteredAnime();
   displayAnime(filtered);
-  updateStatistics();
 }
 
-// Get filtered anime based on current view
 function getFilteredAnime() {
-  const searchTerm = searchInput.value.toLowerCase();
-
+  const searchTerm = DOM.searchInput.value.toLowerCase();
   let filtered = animeList;
 
-  // Filter by status
   if (currentView !== 'all') {
-    filtered = filtered.filter(anime => anime.status === currentView);
+    filtered = filtered.filter(a => a.status === currentView);
   }
 
-  // Filter by search term
   if (searchTerm) {
-    filtered = filtered.filter(anime =>
-      anime.title.toLowerCase().includes(searchTerm) ||
-      (anime.notes && anime.notes.toLowerCase().includes(searchTerm))
+    filtered = filtered.filter(a =>
+      a.title.toLowerCase().includes(searchTerm) ||
+      (a.notes && a.notes.toLowerCase().includes(searchTerm))
     );
   }
 
   return filtered;
 }
 
-// Display anime in grid or table layout
 function displayAnime(anime) {
+  // Update count
+  DOM.sectionCount.textContent = `${anime.length} anime`;
+
   if (!anime || anime.length === 0) {
-    animeContainer.style.display = 'none';
-    emptyState.style.display = 'flex';
+    DOM.animeContainer.style.display = 'none';
+    DOM.emptyState.style.display = 'flex';
     return;
   }
 
-  animeContainer.style.display = currentLayout === 'grid' ? 'grid' : 'block';
-  emptyState.style.display = 'none';
+  DOM.animeContainer.style.display = 'grid';
+  DOM.emptyState.style.display = 'none';
+  DOM.animeContainer.innerHTML = anime.map(a => createAnimeCard(a)).join('');
 
-  if (currentLayout === 'grid') {
-    displayAnimeGrid(anime);
-  } else {
-    displayAnimeTable(anime);
-  }
+  // Observe cards for scroll-triggered reveal
+  requestAnimationFrame(() => observeCards());
 }
 
-// Display anime in grid layout
-function displayAnimeGrid(anime) {
-  animeContainer.className = 'anime-grid';
-  animeContainer.innerHTML = anime.map(a => createAnimeCard(a)).join('');
-}
+// ═══════════════════════════════════════════════════
+// ANIME CARD CREATION
+// ═══════════════════════════════════════════════════
 
-// Create anime card HTML
 function createAnimeCard(anime) {
   const progress = anime.episodes && anime.currentEpisode
-    ? (anime.currentEpisode / anime.episodes) * 100
+    ? Math.min((anime.currentEpisode / anime.episodes) * 100, 100)
     : 0;
 
-  const rating = anime.rating ? '⭐'.repeat(Math.round(anime.rating / 2)) : 'Not rated';
+  const hasImage = anime.imageUrl && anime.imageUrl.trim();
+
+  const imageSection = hasImage
+    ? `<div class="card-image" style="background-image: url('${anime.imageUrl}')"></div>`
+    : `<div class="card-image-placeholder">
+        <span class="card-placeholder-text">${anime.title.charAt(0)}</span>
+       </div>`;
+
+  const ratingSection = anime.rating
+    ? `<span class="card-rating">
+        <svg width="12" height="12" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        ${anime.rating}
+       </span>`
+    : '';
+
+  const progressSection = anime.episodes
+    ? `<div class="card-progress">
+        <div class="card-progress-fill" style="width: ${progress}%"></div>
+       </div>`
+    : '';
+
+  const notesSection = anime.notes
+    ? `<div class="card-notes">"${anime.notes}"</div>`
+    : '';
 
   return `
     <div class="anime-card" data-id="${anime.id}">
-      <div class="anime-card-header">
-        <h3 class="anime-title">${anime.title}</h3>
-        <div class="anime-actions">
-          <button class="icon-btn edit-btn" onclick="openEditModal(${anime.id})">✏️</button>
-          <button class="icon-btn delete-btn" onclick="openDeleteModal(${anime.id}, '${anime.title.replace(/'/g, "\\'")}')">🗑️</button>
-        </div>
+      ${imageSection}
+      <div class="card-overlay"></div>
+
+      <div class="card-status status-${anime.status}">
+        <span class="status-dot"></span>
+        ${formatStatus(anime.status)}
       </div>
 
-      <div class="anime-status status-${anime.status}">
-        ${getStatusEmoji(anime.status)} ${formatStatus(anime.status)}
+      <div class="card-actions">
+        <button class="card-action-btn" data-action="edit" data-anime-id="${anime.id}" title="Edit" aria-label="Edit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+        <button class="card-action-btn btn-delete" data-action="delete" data-anime-id="${anime.id}" data-anime-title="${anime.title.replace(/"/g, '&quot;')}" title="Delete" aria-label="Delete">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
       </div>
 
-      <div class="anime-info">
-        <div class="info-row">
-          <span class="info-label">Episodes:</span>
-          <span class="info-value">${anime.currentEpisode || 0}/${anime.episodes || '?'}</span>
-        </div>
-        ${anime.episodes ? `
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${progress}%"></div>
-          </div>
-        ` : ''}
-        <div class="info-row">
-          <span class="info-label">Rating:</span>
-          <span class="info-value rating">${rating}</span>
-        </div>
-      </div>
-
-      ${anime.notes ? `<div class="anime-notes">"${anime.notes}"</div>` : ''}
-    </div>
-  `;
-}
-
-// Display anime in table layout
-function displayAnimeTable(anime) {
-  animeContainer.className = 'anime-table';
-  animeContainer.innerHTML = `
-    <div class="anime-table-header">
-      <div class="anime-table-row">
-        <div class="anime-table-cell"><strong>Title</strong></div>
-        <div class="anime-table-cell"><strong>Status</strong></div>
-        <div class="anime-table-cell"><strong>Progress</strong></div>
-        <div class="anime-table-cell"><strong>Rating</strong></div>
-        <div class="anime-table-cell"><strong>Actions</strong></div>
-      </div>
-    </div>
-    ${anime.map(a => `
-      <div class="anime-table-row">
-        <div class="anime-table-cell">${a.title}</div>
-        <div class="anime-table-cell">
-          <span class="anime-status status-${a.status}">
-            ${getStatusEmoji(a.status)} ${formatStatus(a.status)}
+      <div class="card-body">
+        <h3 class="card-title">${anime.title}</h3>
+        <div class="card-meta">
+          <span class="card-meta-item">
+            EP ${anime.currentEpisode || 0}/${anime.episodes || '?'}
           </span>
+          ${ratingSection}
         </div>
-        <div class="anime-table-cell">${a.currentEpisode || 0}/${a.episodes || '?'}</div>
-        <div class="anime-table-cell">
-          ${a.rating ? `⭐ ${a.rating}/10` : 'Not rated'}
-        </div>
-        <div class="anime-table-cell">
-          <button class="icon-btn" onclick="openEditModal(${a.id})">✏️</button>
-          <button class="icon-btn" onclick="openDeleteModal(${a.id}, '${a.title.replace(/'/g, "\\'")}')">🗑️</button>
-        </div>
+        ${progressSection}
+        ${notesSection}
       </div>
-    `).join('')}
+    </div>
   `;
 }
 
-// Update statistics
-function updateStatistics() {
+// ═══════════════════════════════════════════════════
+// HERO STATS — ANIMATED COUNTERS
+// ═══════════════════════════════════════════════════
+
+function updateHeroStats() {
   const total = animeList.length;
   const watching = animeList.filter(a => a.status === 'watching').length;
   const completed = animeList.filter(a => a.status === 'completed').length;
   const totalEpisodes = animeList.reduce((sum, a) => sum + (a.currentEpisode || 0), 0);
 
-  const ratedAnime = animeList.filter(a => a.rating);
-  const avgRating = ratedAnime.length > 0
-    ? (ratedAnime.reduce((sum, a) => sum + a.rating, 0) / ratedAnime.length).toFixed(1)
-    : '-';
-
-  document.getElementById('totalCount').textContent = total;
-  document.getElementById('watchingCount').textContent = watching;
-  document.getElementById('completedCount').textContent = completed;
-  document.getElementById('totalEpisodes').textContent = totalEpisodes;
-  document.getElementById('avgRating').textContent = avgRating;
+  animateCounter($('#heroTotal'), total);
+  animateCounter($('#heroWatching'), watching);
+  animateCounter($('#heroCompleted'), completed);
+  animateCounter($('#heroEpisodes'), totalEpisodes);
 }
 
-// Modal functions
+function animateCounter(el, target) {
+  if (!el) return;
+  const start = parseInt(el.textContent) || 0;
+  const duration = 800;
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + (target - start) * eased);
+    el.textContent = current;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+
+  requestAnimationFrame(update);
+}
+
+// ═══════════════════════════════════════════════════
+// JIKAN API — ANIME SEARCH
+// ═══════════════════════════════════════════════════
+
+let _jikanCache = [];
+
+async function searchJikanAnime(query) {
+  try {
+    const response = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=6&sfw=true`);
+
+    if (!response.ok) {
+      // Rate limited — retry after delay
+      if (response.status === 429) {
+        setTimeout(() => searchJikanAnime(query), 1500);
+        return;
+      }
+      throw new Error('API error');
+    }
+
+    const data = await response.json();
+    displaySearchResults(data.data || []);
+  } catch (error) {
+    console.error('Jikan API error:', error);
+    DOM.searchResults.classList.remove('open');
+  } finally {
+    DOM.searchSpinner.classList.remove('active');
+  }
+}
+
+function displaySearchResults(results) {
+  _jikanCache = results;
+
+  if (!results.length) {
+    DOM.searchResults.innerHTML = '<div class="search-result-item no-result" style="color:var(--text-muted);justify-content:center;">No results found</div>';
+    DOM.searchResults.classList.add('open');
+    return;
+  }
+
+  DOM.searchResults.innerHTML = results.map((anime, i) => {
+    const img = anime.images?.jpg?.image_url || '';
+    const episodes = anime.episodes ? `${anime.episodes} eps` : 'Unknown eps';
+    const year = anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '';
+    const meta = [year, episodes, anime.type].filter(Boolean).join(' · ');
+    const displayTitle = anime.title_english || anime.title || '';
+
+    return `
+      <div class="search-result-item" data-index="${i}" role="option" tabindex="-1">
+        <img class="search-result-img" src="${img}" alt="" loading="lazy">
+        <div class="search-result-info">
+          <div class="search-result-title">${displayTitle}</div>
+          <div class="search-result-meta">${meta}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Handle image errors (CSP-safe, no inline onerror)
+  DOM.searchResults.querySelectorAll('.search-result-img').forEach(img => {
+    img.addEventListener('error', () => { img.style.display = 'none'; });
+  });
+
+  DOM.searchResults.classList.add('open');
+}
+
+function selectJikanResult(malId, title, imageUrl, episodes, meta) {
+  selectedJikanAnime = { malId, title, imageUrl, episodes };
+
+  // Fill form fields
+  const titleInput = document.getElementById('animeTitle');
+  if (titleInput) titleInput.value = title || '';
+  
+  if (episodes > 0) {
+    const epInput = document.getElementById('animeEpisodes');
+    if (epInput) epInput.value = episodes;
+  }
+
+  // Show preview
+  if (imageUrl) {
+    const previewImg = document.getElementById('previewImage');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewMeta = document.getElementById('previewMeta');
+    const selectedPreview = document.getElementById('selectedPreview');
+    
+    if (previewImg) previewImg.src = imageUrl;
+    if (previewTitle) previewTitle.textContent = title;
+    if (previewMeta) previewMeta.textContent = meta;
+    if (selectedPreview) selectedPreview.style.display = 'flex';
+  }
+
+  // Close search results dropdown
+  DOM.searchResults.classList.remove('open');
+  DOM.searchResults.innerHTML = '';
+
+  showToast(`Selected: ${title}`, 'success');
+}
+
+function clearAnimeSelection() {
+  selectedJikanAnime = null;
+  DOM.selectedPreview.style.display = 'none';
+  $('#previewImage').src = '';
+  $('#animeTitle').value = '';
+  $('#animeEpisodes').value = '';
+  $('#animeTitle').focus();
+}
+
+// ═══════════════════════════════════════════════════
+// STAR RATING
+// ═══════════════════════════════════════════════════
+
+function setupStarRating() {
+  const stars = $$('.rating-star');
+  const display = $('#ratingDisplay');
+
+  stars.forEach(star => {
+    star.addEventListener('mouseenter', () => {
+      const val = parseInt(star.dataset.value);
+      stars.forEach(s => {
+        const sv = parseInt(s.dataset.value);
+        s.classList.toggle('hover-preview', sv <= val);
+      });
+    });
+
+    star.addEventListener('click', () => {
+      const val = parseInt(star.dataset.value);
+      currentRating = val;
+      $('#animeRating').value = val;
+      stars.forEach(s => {
+        s.classList.toggle('active', parseInt(s.dataset.value) <= val);
+        s.classList.remove('hover-preview');
+      });
+      display.textContent = `${val}/10`;
+    });
+  });
+
+  // Reset hover on leave
+  const ratingInput = $('#ratingInput');
+  ratingInput.addEventListener('mouseleave', () => {
+    stars.forEach(s => {
+      s.classList.remove('hover-preview');
+    });
+  });
+}
+
+function setStarRating(val) {
+  currentRating = val;
+  $('#animeRating').value = val || '';
+  const stars = $$('.rating-star');
+  const display = $('#ratingDisplay');
+
+  stars.forEach(s => {
+    s.classList.toggle('active', val && parseInt(s.dataset.value) <= val);
+    s.classList.remove('hover-preview');
+  });
+  display.textContent = val ? `${val}/10` : 'No rating';
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL HANDLING
+// ═══════════════════════════════════════════════════
+
 function openAddModal() {
   editingAnimeId = null;
-  document.getElementById('modalTitle').textContent = 'Add Anime';
-  document.getElementById('submitBtnText').textContent = 'Add Anime';
-  animeForm.reset();
-  animeModal.classList.add('show');
+  selectedJikanAnime = null;
+  $('#modalTitle').textContent = 'Add Anime';
+  $('#submitBtnText').textContent = 'Add Anime';
+  DOM.animeForm.reset();
+  DOM.selectedPreview.style.display = 'none';
+  DOM.searchResults.classList.remove('open');
+  DOM.searchResults.innerHTML = '';
+  setStarRating(0);
+  DOM.animeModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Focus on title input
+  setTimeout(() => $('#animeTitle').focus(), 300);
 }
 
 function openEditModal(id) {
@@ -288,101 +641,159 @@ function openEditModal(id) {
   const anime = animeList.find(a => a.id === id);
   if (!anime) return;
 
-  document.getElementById('modalTitle').textContent = 'Edit Anime';
-  document.getElementById('submitBtnText').textContent = 'Update Anime';
+  selectedJikanAnime = anime.imageUrl ? { imageUrl: anime.imageUrl, malId: anime.malId } : null;
 
-  document.getElementById('animeTitle').value = anime.title;
-  document.getElementById('animeStatus').value = anime.status;
-  document.getElementById('animeEpisodes').value = anime.episodes || '';
-  document.getElementById('animeCurrent').value = anime.currentEpisode || 0;
-  document.getElementById('animeRating').value = anime.rating || '';
-  document.getElementById('animeNotes').value = anime.notes || '';
+  $('#modalTitle').textContent = 'Edit Anime';
+  $('#submitBtnText').textContent = 'Update';
 
-  animeModal.classList.add('show');
+  $('#animeTitle').value = anime.title;
+  $('#animeStatus').value = anime.status;
+  $('#animeEpisodes').value = anime.episodes || '';
+  $('#animeCurrent').value = anime.currentEpisode || 0;
+  $('#animeNotes').value = anime.notes || '';
+
+  setStarRating(anime.rating || 0);
+
+  // Show preview if image exists
+  if (anime.imageUrl) {
+    $('#previewImage').src = anime.imageUrl;
+    $('#previewTitle').textContent = anime.title;
+    $('#previewMeta').textContent = `EP ${anime.currentEpisode || 0}/${anime.episodes || '?'}`;
+    DOM.selectedPreview.style.display = 'flex';
+  } else {
+    DOM.selectedPreview.style.display = 'none';
+  }
+
+  DOM.searchResults.classList.remove('open');
+  DOM.searchResults.innerHTML = '';
+  DOM.animeModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 function openDeleteModal(id, title) {
   editingAnimeId = id;
-  document.getElementById('deleteAnimeName').textContent = title;
-  deleteModal.classList.add('show');
+  $('#deleteAnimeName').textContent = title;
+  DOM.deleteModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeModals() {
-  animeModal.classList.remove('show');
-  deleteModal.classList.remove('show');
+  DOM.animeModal.classList.remove('show');
+  DOM.deleteModal.classList.remove('show');
+  document.body.style.overflow = '';
   editingAnimeId = null;
+  selectedJikanAnime = null;
+  DOM.searchResults.classList.remove('open');
+  DOM.searchResults.innerHTML = '';
 }
 
-// Handle form submission
+// ═══════════════════════════════════════════════════
+// FORM HANDLING
+// ═══════════════════════════════════════════════════
+
 async function handleFormSubmit(e) {
   e.preventDefault();
 
+  // If search results are open, select the first result instead of saving
+  if (DOM.searchResults.classList.contains('open') && _jikanCache && _jikanCache.length > 0) {
+    const anime = _jikanCache[0];
+    const img = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+    const title = anime.title_english || anime.title || '';
+    const episodes = anime.episodes || 0;
+    const year = anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '';
+    const meta = [year, episodes ? `${episodes} eps` : '', anime.type].filter(Boolean).join(' · ');
+    selectJikanResult(anime.mal_id, title, img, episodes, meta);
+    return;
+  }
+
   const animeData = {
-    title: document.getElementById('animeTitle').value,
-    status: document.getElementById('animeStatus').value,
-    episodes: parseInt(document.getElementById('animeEpisodes').value) || null,
-    currentEpisode: parseInt(document.getElementById('animeCurrent').value) || 0,
-    rating: parseFloat(document.getElementById('animeRating').value) || null,
-    notes: document.getElementById('animeNotes').value
+    title: $('#animeTitle').value.trim(),
+    status: $('#animeStatus').value,
+    episodes: parseInt($('#animeEpisodes').value) || null,
+    currentEpisode: parseInt($('#animeCurrent').value) || 0,
+    rating: parseFloat($('#animeRating').value) || null,
+    notes: $('#animeNotes').value.trim(),
+    imageUrl: selectedJikanAnime?.imageUrl || null,
+    malId: selectedJikanAnime?.malId || null,
   };
+
+  if (!animeData.title) {
+    showToast('Please enter an anime title', 'error');
+    return;
+  }
 
   try {
     if (editingAnimeId) {
       await window.animeStorage.updateAnime(editingAnimeId, animeData);
-      showNotification('Anime updated successfully!', 'success');
+      showToast('Anime updated!', 'success');
     } else {
       await window.animeStorage.addAnime(animeData);
-      showNotification('Anime added successfully!', 'success');
+      showToast('Anime added!', 'success');
     }
 
     await loadAnimeList();
     closeModals();
   } catch (error) {
     console.error('Error saving anime:', error);
-    showNotification('Error saving anime', 'error');
+    showToast('Error saving anime', 'error');
   }
 }
 
-// Handle delete
 async function handleDelete() {
   if (!editingAnimeId) return;
 
   try {
     await window.animeStorage.deleteAnime(editingAnimeId);
-    showNotification('Anime deleted successfully!', 'success');
+    showToast('Anime deleted', 'success');
     await loadAnimeList();
     closeModals();
   } catch (error) {
     console.error('Error deleting anime:', error);
-    showNotification('Error deleting anime', 'error');
+    showToast('Error deleting anime', 'error');
   }
 }
 
-// Handle search
-function handleSearch() {
-  filterAndDisplayAnime();
+// ═══════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════
+
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+
+  const icon = type === 'success' ? '✓' : '✕';
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <span class="toast-message">${message}</span>
+  `;
+
+  DOM.toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
-// Helper functions
-function getStatusEmoji(status) {
-  const emojis = {
-    'watching': '📺',
-    'completed': '✅',
-    'plan-to-watch': '📋',
-    'on-hold': '⏸️',
-    'dropped': '❌'
-  };
-  return emojis[status] || '📺';
-}
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
 
 function formatStatus(status) {
-  return status.split('-').map(word =>
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
+  const map = {
+    'watching': 'Watching',
+    'completed': 'Completed',
+    'plan-to-watch': 'Plan to Watch',
+    'on-hold': 'On Hold',
+    'dropped': 'Dropped'
+  };
+  return map[status] || status;
 }
 
-function showNotification(message, type = 'info') {
-  // Simple notification (can be enhanced with a toast library)
-  console.log(`[${type.toUpperCase()}] ${message}`);
-  // TODO: Implement toast notifications
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }

@@ -128,6 +128,8 @@ class AnimeStorage {
       currentEpisode: anime.currentEpisode || 0,
       rating: anime.rating || null,
       notes: anime.notes || '',
+      imageUrl: anime.imageUrl || null,
+      malId: anime.malId || null,
       addedDate: new Date().toISOString()
     };
     animeList.push(newAnime);
